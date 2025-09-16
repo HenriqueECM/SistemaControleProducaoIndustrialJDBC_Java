@@ -7,6 +7,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MateriaPrimaDAO {
     public void inserirMateriaPrima(MateriaPrima materiaPrima){
@@ -40,5 +42,28 @@ public class MateriaPrimaDAO {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public List<MateriaPrima> listarMateriaPrima (){
+        String query = "SELECT id, nome, estoque FROM MateriaPrima WHERE estoque > 0";
+
+        List<MateriaPrima> materiaPrimaList = new ArrayList<>();
+
+        try (Connection conn = Conexao.conectar();
+            PreparedStatement stmt = conn.prepareStatement(query)){
+
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()){
+                int id = rs.getInt("id");
+                String nome = rs.getString("nome");
+                double estoque = rs.getDouble("estoque");
+                MateriaPrima materiaPrima = new MateriaPrima(id, nome, estoque);
+                materiaPrimaList.add(materiaPrima);
+            }
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+        return materiaPrimaList;
     }
 }

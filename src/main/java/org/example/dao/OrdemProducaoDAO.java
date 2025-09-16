@@ -54,6 +54,19 @@ public class OrdemProducaoDAO {
         try (Connection conn = Conexao.conectar();
         PreparedStatement stmt = conn.prepareStatement(query)){
 
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()){
+                int id = rs.getInt("id");
+                int idProduto = rs.getInt("idProduto");
+                int idMaquina = rs.getInt("idMaquina");
+                double quantidadeProduzir = rs.getDouble("quantidadeProduzir");
+                Date dataSolicitacao = rs.getDate("dataSolicitacao");
+                String status = rs.getString("status");
+                OrdemProducao ordemProducao = new OrdemProducao(id, idProduto, idMaquina, quantidadeProduzir, dataSolicitacao.toLocalDate(), status);
+                ordemProducaoList.add(ordemProducao);
+            }
+
         } catch (SQLException e){
             e.printStackTrace();
         }

@@ -8,7 +8,7 @@ public class OrdemProducao {
     private double quantidadeProduzir;
     private String status;
 
-    public OrdemProducao(int id, int idProduto, int idMaquina, LocalDate dataSolicitacao, double quantidadeProduzir, String status){
+    public OrdemProducao(int id, int idProduto, int idMaquina, double quantidadeProduzir, LocalDate dataSolicitacao, String status){
         this.id = id;
         this.dataSolicitacao = dataSolicitacao;
         this.status = status;

@@ -71,7 +71,65 @@ public class Main {
     }
 
     private static void AssociarMateriasPrimasOrdem() {
+        OrdemProducaoDAO ordemProducaoDao = new OrdemProducaoDAO();
+        List<Integer> opcaoOrdem = new ArrayList<>();
+        List<OrdemProducao> ordemProducaoList = ordemProducaoDao.listarOrdemPendente();
 
+        for (OrdemProducao ordemProducao : ordemProducaoList){
+            System.out.println("------- Ordem de Produção -------" +
+                    "\nID: " + ordemProducao.getId() +
+                    "\nID Produto: " + ordemProducao.getIdProduto() +
+                    "\nID Máquina: " + ordemProducao.getIdMaquina() +
+                    "\nQuantidade Produzir: " + ordemProducao.getQuantidadeProduzir() +
+                    "\nData solicitação: " + ordemProducao.getDataSolicitacao() +
+                    "\nStatus: " + ordemProducao.getStatus());
+            opcaoOrdem.add(ordemProducao.getId());
+        }
+        System.out.println("Digite o ID da ordem de produção que deseja: ");
+        int idOrdem = SC.nextInt();
+
+        if (opcaoOrdem.contains(idOrdem)){
+            List<Integer> opcaoMateria = new ArrayList<>();
+            MateriaPrimaDAO materiaPrimaDao = new MateriaPrimaDAO();
+            List<MateriaPrima> materiaPrimaList = materiaPrimaDao.listarMateriaPrima();
+
+            for(MateriaPrima materiaPrima : materiaPrimaList){
+                System.out.println("------ Matéria Prima ------" +
+                        "\nID: " + materiaPrima.getId() +
+                        "\nNome: " + materiaPrima.getNome() +
+                        "\nEstoque: " + materiaPrima.getEstoque());
+                opcaoMateria.add(materiaPrima.getId());
+            }
+            System.out.println("Digite o ID da matéria prima que deseja: ");
+            int idMateria = SC.nextInt();
+
+            OrdemMateriaPrimaDAO ordemMateriaPrimaDao = new OrdemMateriaPrimaDAO();
+            boolean ordemMateriaExiste = ordemMateriaPrimaDao.buscarExistencia(idOrdem, idMateria);
+
+            if (opcaoMateria.contains(idMateria) && !ordemMateriaExiste){
+                System.out.println("Digite a quantidade da matéria prima que será utilizada");
+                double quantidade = SC.nextDouble();
+                SC.nextLine();
+
+                double quantidadeEstoque = 0;
+                for (MateriaPrima materiaPrima : materiaPrimaList){
+                    if (idMateria == materiaPrima.getId()){
+                        quantidadeEstoque = materiaPrima.getEstoque();
+                    }
+                }
+
+                if (quantidadeEstoque >= quantidade && quantidade > 0){
+                    OrdemMateriaPrima ordemMateriaPrima = new OrdemMateriaPrima(idOrdem, idMateria, quantidade);
+                    ordemMateriaPrimaDao.inserirOrdemMateria(ordemMateriaPrima);
+                } else {
+                    System.out.println("Quantidade inválida. Insira um número possível!");
+                }
+            } else {
+                System.out.println("Opção inválida! Já existe essa ordem cadastrada ou não possui ID da matéria prima.");
+            }
+        } else {
+            System.out.println("Não existe ID Digitado! Digite outro ID.");
+        }
     }
 
     private static void criarOrdemProducao() {
@@ -100,7 +158,7 @@ public class Main {
                 System.out.println("------ Máquinas ------" +
                         "\nID: " + maquina.getId() +
                         "\nNOME: " + maquina.getNome() +
-                        "n\ndSetor: " + maquina.getIdSetor() +
+                        "n\nID Setor: " + maquina.getIdSetor() +
                         "\nSTATUS: " + maquina.getStatus() +
                         "\n------------------\n");
                 opcoesMaquina.add(maquina.getId());
@@ -120,6 +178,7 @@ public class Main {
 
                     if (!existeOrdemProducao){
                         ordemProducaoDao.inserirOrdemProducao(ordemProducao);
+                        maquinaDao.atualizarStatusEmProducao(idMaquina, "EM_PRODUÇÃO");
                     } else {
                         System.out.println("Ordem inválido! Já existe essa ordem cadastrada.");
                     }

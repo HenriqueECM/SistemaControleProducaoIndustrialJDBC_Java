@@ -70,13 +70,14 @@ public class MaquinaDAO {
         return maquinaList;
     }
 
-    public void atualizarStatusEmProducao(int id){
-        String query = "UPDATE Maquina SET status = 'EM_PRODUCAO' WHERE id = ?";
+    public void atualizarStatusEmProducao(int id, String status){
+        String query = "UPDATE Maquina SET status = ? WHERE id = ?";
 
         try (Connection conn = Conexao.conectar();
             PreparedStatement stmt = conn.prepareStatement(query)){
 
-            stmt.setInt(1, id);
+            stmt.setString(1, status);
+            stmt.setInt(2, id);
             stmt.executeUpdate();
 
             System.out.println("\nMáquina ID: " + id + " está em produção." );
