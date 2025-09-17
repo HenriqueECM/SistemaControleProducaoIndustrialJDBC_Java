@@ -47,7 +47,7 @@ public class OrdemProducaoDAO {
     }
 
     public List<OrdemProducao> listarOrdemPendente(){
-        String query = "SELECT id, idProduto, idMaquina, quantidadeProduzir, dataSolicitacao, status FROM OrdemProducao WHERE status = 'PENDENTE.'";
+        String query = "SELECT id, idProduto, idMaquina, quantidadeProduzir, dataSolicitacao, status FROM OrdemProducao WHERE status = 'PENDENTE'";
 
         List<OrdemProducao> ordemProducaoList = new ArrayList<>();
 
@@ -71,5 +71,48 @@ public class OrdemProducaoDAO {
             e.printStackTrace();
         }
         return ordemProducaoList;
+    }
+
+    public List<OrdemProducao> listarOrdem(){
+        String query = "SELECT id, idProduto, idMaquina, quantidadeProduzir, dataSolicitacao, status FROM OrdemProducao";
+
+        List<OrdemProducao> ordemProducaoList = new ArrayList<>();
+
+        try (Connection conn = Conexao.conectar();
+             PreparedStatement stmt = conn.prepareStatement(query)){
+
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()){
+                int id = rs.getInt("id");
+                int idProduto = rs.getInt("idProduto");
+                int idMaquina = rs.getInt("idMaquina");
+                double quantidadeProduzir = rs.getDouble("quantidadeProduzir");
+                Date dataSolicitacao = rs.getDate("dataSolicitacao");
+                String status = rs.getString("status");
+                OrdemProducao ordemProducao = new OrdemProducao(id, idProduto, idMaquina, quantidadeProduzir, dataSolicitacao.toLocalDate(), status);
+                ordemProducaoList.add(ordemProducao);
+            }
+
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+        return ordemProducaoList;
+    }
+
+    public void atualizarStatusConcluida (int id, String status){
+        String query = "UPDATE OrdemProducao SET status = ? WHERE id = ?";
+
+        try (Connection conn = Conexao.conectar();
+            PreparedStatement stmt = conn.prepareStatement(query)){
+
+            stmt.setString(1, status);
+            stmt.setInt(2, id);
+            stmt.executeUpdate();
+
+            System.out.println("\nOrdem de produção concluida com sucesso!");
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
     }
 }

@@ -5,10 +5,7 @@ import org.example.model.*;
 
 import java.sql.SQLOutput;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
-import java.util.Set;
+import java.util.*;
 
 public class Main {
     static Scanner SC = new Scanner(System.in);
@@ -58,7 +55,15 @@ public class Main {
                 break;
             }
             case 6: {
-                AssociarMateriasPrimasOrdem();
+                associarMateriasPrimasOrdem();
+                break;
+            }
+            case 7: {
+                executarProducao();
+                break;
+            }
+            case 8: {
+                consultaOrdem();
                 break;
             }
             case 0: {
@@ -70,7 +75,93 @@ public class Main {
         }
     }
 
-    private static void AssociarMateriasPrimasOrdem() {
+    private static void consultaOrdem() {
+        boolean sair = false;
+
+        while (!sair){
+            System.out.println("\n------ CONSULTAS ------" +
+                    "\n1 - Ordem de Produção" +
+                    "\n2 - Estoque atual de materia prima");
+            int opcao = SC.nextInt();
+
+            switch (opcao){
+                case 1:{
+                    OrdemProducaoDAO ordemProducaoDao = new OrdemProducaoDAO();
+                    List<OrdemProducao> ordemProducaoList = ordemProducaoDao.listarOrdem();
+                    for (OrdemProducao ordemProducao : ordemProducaoList){
+                        System.out.println("\n------- Ordem de Produção -------" +
+                                "\nID Ordem: " + ordemProducao.getId() +
+                                "\nID Produto: " + ordemProducao.getIdProduto() +
+                                "\nID Máquina: " + ordemProducao.getIdMaquina() +
+                                "\nQuantidade Produzir: " + ordemProducao.getQuantidadeProduzir() +
+                                "\nData solicitação: " + ordemProducao.getDataSolicitacao() +
+                                "\nStatus: " + ordemProducao.getStatus());
+                    }
+                }
+            }
+        }
+    }
+
+    private static void executarProducao() {
+        MaquinaDAO maquinaDao = new MaquinaDAO();
+        OrdemProducaoDAO ordemProducaoDao = new OrdemProducaoDAO();
+        List<Integer> opcaoOrdem = new ArrayList<>();
+        List<OrdemProducao> ordemProducaoList = ordemProducaoDao.listarOrdemPendente();
+
+        for (OrdemProducao ordemProducao : ordemProducaoList){
+            System.out.println("\n------- Ordem de Produção -------" +
+                    "\nID Ordem: " + ordemProducao.getId() +
+                    "\nID Produto: " + ordemProducao.getIdProduto() +
+                    "\nID Máquina: " + ordemProducao.getIdMaquina() +
+                    "\nQuantidade Produzir: " + ordemProducao.getQuantidadeProduzir() +
+                    "\nData solicitação: " + ordemProducao.getDataSolicitacao() +
+                    "\nStatus: " + ordemProducao.getStatus());
+            opcaoOrdem.add(ordemProducao.getId());
+        }
+        System.out.println("\nDigite o ID da ordem de produção que deseja executar: ");
+        int idOrdem = SC.nextInt();
+
+        Map<Integer, Double> atualizacoes = new HashMap<>();
+
+        MateriaPrimaDAO materiaPrimaDao = new MateriaPrimaDAO();
+        OrdemMateriaPrimaDAO ordemMateriaPrimaDao = new OrdemMateriaPrimaDAO();
+
+        if (opcaoOrdem.contains(idOrdem)){
+            List<OrdemMateriaPrima> ordemMateriaPrimaList = ordemMateriaPrimaDao.buscarOrdemMateriaPorId(idOrdem);
+
+            for (OrdemMateriaPrima ordemMateriaPrima : ordemMateriaPrimaList){
+                double estoque = materiaPrimaDao.verificarEstoqueMateriaPorId(ordemMateriaPrima.getIdMateriaPrima());
+                if (estoque >= ordemMateriaPrima.getQuantidade()){
+                    atualizacoes.put(ordemMateriaPrima.getIdMateriaPrima(), (estoque - ordemMateriaPrima.getQuantidade()));
+                } else {
+                    System.out.println("Estoque insuficiente para realizar produção.");
+                    executarProducao();
+                }
+            }
+            // aqui vou interar a lista do Map atualizações e dar entrada de dados que coletei no forEach anterior e
+            // atualizar o estoque atravez do metodo UPDATE no DAO
+            for (Map.Entry<Integer, Double> executar : atualizacoes.entrySet()){
+                materiaPrimaDao.atualizarEstoque(executar.getKey(), executar.getValue());
+            }
+
+            // atualizar ordem de produção para concluida
+            ordemProducaoDao.atualizarStatusConcluida(idOrdem, "CONCLUIDA");
+
+            int idMaquina = 0;
+
+            for (OrdemProducao ordemProducao : ordemProducaoList){
+                if (ordemProducao.getId() == idOrdem){
+                    idMaquina = ordemProducao.getIdMaquina();
+                }
+            }
+            maquinaDao.atualizarStatusOperacional(idMaquina, "OPERACIONAL");
+        } else {
+            System.out.println("Opção inválida!");
+            executarProducao();
+        }
+    }
+
+    private static void associarMateriasPrimasOrdem() {
         OrdemProducaoDAO ordemProducaoDao = new OrdemProducaoDAO();
         List<Integer> opcaoOrdem = new ArrayList<>();
         List<OrdemProducao> ordemProducaoList = ordemProducaoDao.listarOrdemPendente();
@@ -85,7 +176,7 @@ public class Main {
                     "\nStatus: " + ordemProducao.getStatus());
             opcaoOrdem.add(ordemProducao.getId());
         }
-        System.out.println("Digite o ID da ordem de produção que deseja: ");
+        System.out.println("\nDigite o ID da ordem de produção que deseja: ");
         int idOrdem = SC.nextInt();
 
         if (opcaoOrdem.contains(idOrdem)){
@@ -100,14 +191,14 @@ public class Main {
                         "\nEstoque: " + materiaPrima.getEstoque());
                 opcaoMateria.add(materiaPrima.getId());
             }
-            System.out.println("Digite o ID da matéria prima que deseja: ");
+            System.out.println("\nDigite o ID da matéria prima que deseja: ");
             int idMateria = SC.nextInt();
 
             OrdemMateriaPrimaDAO ordemMateriaPrimaDao = new OrdemMateriaPrimaDAO();
             boolean ordemMateriaExiste = ordemMateriaPrimaDao.buscarExistencia(idOrdem, idMateria);
 
             if (opcaoMateria.contains(idMateria) && !ordemMateriaExiste){
-                System.out.println("Digite a quantidade da matéria prima que será utilizada");
+                System.out.println("\nDigite a quantidade da matéria prima que será utilizada");
                 double quantidade = SC.nextDouble();
                 SC.nextLine();
 
