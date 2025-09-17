@@ -68,6 +68,8 @@ public class Main {
             }
             case 0: {
                 sair = true;
+                System.out.println("Finalizando o sistema");
+                break;
             }
         }
         if (!sair){
@@ -81,8 +83,11 @@ public class Main {
         while (!sair){
             System.out.println("\n------ CONSULTAS ------" +
                     "\n1 - Ordem de Produção" +
-                    "\n2 - Estoque atual de materia prima");
+                    "\n2 - Estoque atual de materia prima" +
+                    "\n0 - Sair");
             int opcao = SC.nextInt();
+
+            SC.nextLine();
 
             switch (opcao){
                 case 1:{
@@ -97,6 +102,24 @@ public class Main {
                                 "\nData solicitação: " + ordemProducao.getDataSolicitacao() +
                                 "\nStatus: " + ordemProducao.getStatus());
                     }
+                    break;
+                }
+                case 2: {
+                    MateriaPrimaDAO materiaPrimaDao = new MateriaPrimaDAO();
+                    List<MateriaPrima> materiaPrimaList = materiaPrimaDao.listarMateriaPrima();
+                    for (MateriaPrima materiaPrima : materiaPrimaList){
+                        System.out.println("\n------ Matéria Prima ------" +
+                                "\nID: " + materiaPrima.getId() +
+                                "\nNome: " + materiaPrima.getNome() +
+                                "\nEstoque: " + materiaPrima.getEstoque());
+                    }
+                    break;
+                }
+                case 0:{
+                    sair = true;
+                    System.out.println("\nVoltando para menu principal..");
+                    menu();
+                    break;
                 }
             }
         }
